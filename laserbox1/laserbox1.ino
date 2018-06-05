@@ -26,6 +26,8 @@
 #include <Ethernet.h>
 #include <E131.h>
 
+// Only change this value to setup laserbox
+#define LASERBOX 1
 #define UNIVERSE 1
 #define RELAY1 2
 #define RELAY2 3
@@ -36,16 +38,8 @@
 #define RELAY7 8
 #define RELAY8 9
 
-// Increment the value "0x00" to setup a new unit.
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0x2F, 0x1E, 0x00 };
-IPAddress dnsAddr(192, 168, 1, 10);
-IPAddress gateway(192, 168, 1, 10);
-IPAddress subnet(255, 255, 255, 0);
-// Increment the value "20" to setup a new unit.
-IPAddress ip(192, 168, 1, 20);
 
 E131 e131;
-
 
 
 void setup() {
@@ -68,7 +62,16 @@ void setup() {
     digitalWrite(7, HIGH);
     digitalWrite(8, HIGH);
     digitalWrite(9, HIGH);
-    
+
+    // Setup network interface
+    byte macLastByte = LASERBOX;
+    byte mac[] = { 0xDE, 0xAD, 0xBE, 0x2F, 0x1E, macLastByte };
+    IPAddress dnsAddr(192, 168, 1, 10);
+    IPAddress gateway(192, 168, 1, 10);
+    IPAddress subnet(255, 255, 255, 0);
+    int ipLastOctet = 20 + LASERBOX;
+    IPAddress ip(192, 168, 1, ipLastOctet);
+
 
     /* Configure via DHCP and listen Unicast on the default port */
     e131.begin(mac, ip, subnet, gateway, dnsAddr);
@@ -76,39 +79,6 @@ void setup() {
 
 void setOutput(int dmx, int value) {
   int channel;
-  switch (dmx)
-  {
-    // Set each case to correspond to the dmx address.
-    // Remember the offset is the dmx channel - 1.
-    case 0:
-      channel = RELAY1;
-      break;
-    case 1:
-      channel = RELAY2;
-      break;
-    case 2:
-      channel = RELAY3;
-      break;
-    case 3:
-      channel = RELAY4;
-      break;
-    case 4:
-      channel = RELAY5;
-      break;
-    case 5:
-      channel = RELAY6;
-      break;
-    case 6:
-      channel = RELAY7;
-      break;
-    case 7:
-      channel = RELAY8;
-      break;
-    default:
-      channel = RELAY1;
-      break;
-  }
-
   int level;
   switch (value)
   {
@@ -118,12 +88,45 @@ void setOutput(int dmx, int value) {
     case 255:
       level = LOW;
       break;
-    default:
-      level = HIGH;
-      break;
   }
   
-  digitalWrite(channel, level);
+  switch (dmx)
+  {
+    // Set each case to correspond to the dmx address.
+    // Remember the offset is the dmx channel - 1.
+    case ((LASERBOX * 10) + 0):
+      channel = RELAY1;
+      digitalWrite(channel, level);
+      break;
+    case ((LASERBOX * 10) + 1):
+      channel = RELAY2;
+      digitalWrite(channel, level);
+      break;
+    case ((LASERBOX * 10) + 2):
+      channel = RELAY3;
+      digitalWrite(channel, level);
+      break;
+    case ((LASERBOX * 10) + 3):
+      channel = RELAY4;
+      digitalWrite(channel, level);
+      break;
+    case ((LASERBOX * 10) + 4):
+      channel = RELAY5;
+      digitalWrite(channel, level);
+      break;
+    case ((LASERBOX * 10) + 5):
+      channel = RELAY6;
+      digitalWrite(channel, level);
+      break;
+    case ((LASERBOX * 10) + 6):
+      channel = RELAY7;
+      digitalWrite(channel, level);
+      break;
+    case ((LASERBOX * 10) + 7):
+      channel = RELAY8;
+      digitalWrite(channel, level);
+      break;
+  }
 }
 
 void loop() {
@@ -132,7 +135,7 @@ void loop() {
   {
     if (e131.universe == UNIVERSE && e131.packet->priority !=0)
     {
-      for (int i = 0; i < 8; i++)
+      for (int i = 0; i < 511; i++)
       {
         setOutput(i, e131.data[i]);
       }
