@@ -22,13 +22,16 @@
  * This is the file for Laser Box 0.
  */
 
+
 // Setup #INCLUDE statements for required libraries.
 #include <SPI.h>
 #include <Ethernet.h>
 #include <E131.h>
 
+
 // Change only this value to setup a new laserbox.
 #define LASERBOX 0
+
 
 // Define CONSTANTS used for dmx and relay conrol.
 #define UNIVERSE 1
