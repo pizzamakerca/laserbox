@@ -19,15 +19,17 @@
 */
 
 /*
- * This is the file for Laser Box 1
+ * This is the file for Laser Box 0.
  */
 
 #include <SPI.h>
 #include <Ethernet.h>
 #include <E131.h>
 
-// Only change this value to setup laserbox
-#define LASERBOX 1
+// Change only this value to setup a new laserbox.
+#define LASERBOX 0
+
+// Define CONSTANTS
 #define UNIVERSE 1
 #define RELAY1 2
 #define RELAY2 3
@@ -38,12 +40,12 @@
 #define RELAY7 8
 #define RELAY8 9
 
-
+// Initialiaze an E131 object.
 E131 e131;
 
 
 void setup() {
-    // Setup Pins
+    // Configure digital output pins.
     pinMode(RELAY1, OUTPUT);
     pinMode(RELAY2, OUTPUT);
     pinMode(RELAY3, OUTPUT);
@@ -53,7 +55,7 @@ void setup() {
     pinMode(RELAY7, OUTPUT);
     pinMode(RELAY8, OUTPUT);
 
-    // Set outputs off
+    // Ensure digital outputs are off (HIGH in the case of relays).
     digitalWrite(2, HIGH);
     digitalWrite(3, HIGH);
     digitalWrite(4, HIGH);
@@ -63,7 +65,7 @@ void setup() {
     digitalWrite(8, HIGH);
     digitalWrite(9, HIGH);
 
-    // Setup network interface
+    // Setup the network interface.
     byte macLastByte = LASERBOX;
     byte mac[] = { 0xDE, 0xAD, 0xBE, 0x2F, 0x1E, macLastByte };
     IPAddress dnsAddr(192, 168, 1, 10);
@@ -73,7 +75,10 @@ void setup() {
     IPAddress ip(192, 168, 1, ipLastOctet);
 
 
-    /* Configure via DHCP and listen Unicast on the default port */
+    /* Configure from settings above and listen 
+     * for Unicast broadcast packets on UDP
+     * port 5568.
+     */
     e131.begin(mac, ip, subnet, gateway, dnsAddr);
 }
 
@@ -92,8 +97,14 @@ void setOutput(int dmx, int value) {
   
   switch (dmx)
   {
-    // Set each case to correspond to the dmx address.
-    // Remember the offset is the dmx channel - 1.
+    /* Set each case to map a dmx address sent
+     * by the control system to a pin output on
+     * the Arduino.  
+     * 
+     * The firt case in this file will result in
+     * dmx address 1 being mapped to RELAY1 (pin 2
+     * defined above).
+     */
     case ((LASERBOX * 10) + 0):
       channel = RELAY1;
       digitalWrite(channel, level);
@@ -133,8 +144,13 @@ void loop() {
   /* Parse a packet */
   if (e131.parsePacket())
   {
+    /* Filter the packet down to a specific dmx universe.
+     * Skip packets with priority 0 as those packets cause
+     * undersirable behavior.
+     */
     if (e131.universe == UNIVERSE && e131.packet->priority !=0)
     {
+      // Itterate through all 512 dmx addresses looking for values.
       for (int i = 0; i < 511; i++)
       {
         setOutput(i, e131.data[i]);
